@@ -1,3 +1,7 @@
+//A declaração const cria uma variável cujo o valor é fixo
+//O Node. js é a ferramenta que vai nos entregar a capacidade de interpretar código JavaScript, de maneira bem similar ao navegador.
+//Express é o framework Node mais popular e a biblioteca subjacente para uma série de outros frameworks do Node.
+
 const express = require('express');
 const app = express();
 
