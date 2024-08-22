@@ -1,80 +1,79 @@
-//A declaração const cria uma variável cujo o valor é fixo
-//O Node. js é a ferramenta que vai nos entregar a capacidade de interpretar código JavaScript, de maneira bem similar ao navegador.
-//Express é o framework Node mais popular e a biblioteca subjacente para uma série de outros frameworks do Node.
-
 const express = require('express');
+//importa o mongodb em MongoClient
+const  {MongoClient, ObjectId} = require('mongodb');
+//configura a url do banco
+const url="mongodb://localhost:27017";
+//nome do  banco de dados
+const dbName = "backend-agosto-24";
+//cria um cliente com a url criada
+const client = new MongoClient(url);
+
+async function main (){
+    console.info("Conectando ao banco de dados...");
+    await client.connect();
+    console.info("Banco de dados conectado com sucesso!!!");
+
+    const db = client.db(dbName);
+    const collection = db.collection("herois");
+
 const app = express();
-//Middleware é um bloco de código que é executado em todas as requisições ou nas que respeitam um certo padrão. E é respeitado a ordem de adição de cada um deles.
-//habilitar processamento/manipulacao de JSON
+
 app.use(express.json());
-//isso é um middleware
-//end point inicial
-app.get('/', function(req, res) {
-    res.send('hello world')
-});
-
-//endpoint inicial
-app.get('/oi', function (req, res) {
-    res.send('Ola mundo!')
-});
-
-//lista
-const lista = ["Mulher maravilha", "Capitã Marvel", "Homem de ferro"];
 
 //Read All -> [GET] /herois
-app.get("/herois", (req, res)=> {
-    //res.send(lista);
-    res.send(lista.filter(Boolean));
+app.get("/herois", async function (req, res){
+    const itens = await collection.find().toArray();
+    res.send(itens)
 })
-
 //Create -> [POST] /herois
-app.post("/herois", (req, res)=> {
-    //debug pra verificar se esta recebendo requisicao corretamente
-    console.log(req.body);
+app.post("/herois", async function (req, res){
     //extrai o nome do corpo da requisicao
-    /*const item = "";
-    req.body.heros.forEach(element => {
-        lista.push(element);
-    });*/
-    const item = req.body.nome;
-    //inseri o item na lista
-    lista.push(item);
-    //envia uma resposta de sucesso para frontend
-    res.send("Item add sucess!");
-
+    const item = req.body;
+    //insere item na collection
+    await collection.insertOne(item);
+    //envia o objeto na resposta
+    res.send(item)
 })
-
-//Read by ID -> [GET] /heros/:id
-app.get("/herois/:id", (req, res)=> {
-    //pegamos incialmente o parametro  de rota (id)
-    const id = req.params.id - 1;
-    //buscamos a informacao na lista pelo id
-    const item = lista [id];
+//Read by Id ->  [GET] /herois/:id
+app.get("/herois/:id", async function (req, res){
+    //pegamos inicialmente o parametro de rota (id)
+    const id =req.params.id;
+    //buscamos a informacao collection
+    const item =  await collection.findOne({
+        _id: new ObjectId(id),
+    })
     //exibimos o item na resposta
     res.send(item);
-
 })
-
-//Update -> [PUT] /heros/:id
-app.put("/herois/:id", (req,  res)=>{
+//Update -> [PUT] /herois/:id
+app.put("/herois/:id", async function(req, res){
     //pegamos inicialmente o parametro de rota (id)
-    const id = req.params.id - 1;
-    //extrai o nome do corpo da requisicao
-    const item = req.body.nome;
-    //atualizamos na lista
-    lista[id] = item;
+    const id = req.params.id;
+    //extrai o objeto da requisicao
+    const item = req.body;
+    //atualizamos na collection
+    await collection.updateOne(
+        { _id: new ObjectId(id)},
+        { $set: item}
+    )
     //exibimos o item na resposta
-    res.send("Item atualizado");
+    res.send(item);
 })
-
-//Delete -> [DELETE] /heros/:id
-app.delete("/herois/:id", (req, res)=>{
+//Delete -> [DELETE] /herois/:id
+app.delete("/herois/:id", async function(req,res){
     //pegamos inicialmente o parametro de rota (id) que queremos remover
-    const id = req.params.id - 1;
-    //removemos da lista
-    delete lista[id];
-    //exibimos o item na resposta
-    res.send("Removed!")
+    const id = req.params.id;
+    //removemos da collection
+    await collection.deleteOne(
+        {_id: new ObjectId(id) },
+    );
+    res.send("Item Removido com sucesso!!!");
+})
+app.get("/", function(req, res){
+    res.send("Hello  World!");
 });
 
 app.listen(3000);
+}
+
+main();
