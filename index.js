@@ -4,10 +4,10 @@
 
 const express = require('express');
 const app = express();
-
+//Middleware é um bloco de código que é executado em todas as requisições ou nas que respeitam um certo padrão. E é respeitado a ordem de adição de cada um deles.
 //habilitar processamento/manipulacao de JSON
 app.use(express.json());
-
+//isso é um middleware
 //end point inicial
 app.get('/', function(req, res) {
     res.send('hello world')
